@@ -280,9 +280,24 @@ bool FileUtilsIOS::isFileExist(const std::string& strFilePath)
 
 std::string FileUtilsIOS::getFullPathForDirectoryAndFilename(const std::string& strDirectory, const std::string& strFilename)
 {
+	std::string assetScaleFileName = strFilename;
+	
+	int integralScaleFactor = (int)roundf(Director::getInstance()->getContentScaleFactor());
+	if(integralScaleFactor > 1)
+	{
+		int lastIndex = strFilename.rfind('.');
+		if(lastIndex > 0)
+		{
+			const char* str1 = strFilename.substr(0, lastIndex).c_str();
+			const char* str2 = strFilename.substr(lastIndex).c_str();
+			NSString* formattedFileName = [NSString stringWithFormat:@"%s@%dx%s", str1, integralScaleFactor, str2];
+			assetScaleFileName = [formattedFileName UTF8String];
+		}
+	}
+	
     if (strDirectory[0] != '/')
     {
-        NSString* fullpath = [[NSBundle mainBundle] pathForResource:[NSString stringWithUTF8String:strFilename.c_str()]
+        NSString* fullpath = [[NSBundle mainBundle] pathForResource:[NSString stringWithUTF8String:assetScaleFileName.c_str()]
                                                              ofType:nil
                                                         inDirectory:[NSString stringWithUTF8String:strDirectory.c_str()]];
         if (fullpath != nil) {
@@ -291,7 +306,7 @@ std::string FileUtilsIOS::getFullPathForDirectoryAndFilename(const std::string& 
     }
     else
     {
-        std::string fullPath = strDirectory+strFilename;
+        std::string fullPath = strDirectory+assetScaleFileName;
         // Search path is an absolute path.
         if ([s_fileManager fileExistsAtPath:[NSString stringWithUTF8String:fullPath.c_str()]]) {
             return fullPath;
